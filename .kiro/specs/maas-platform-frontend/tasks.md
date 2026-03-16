@@ -1,0 +1,197 @@
+# Implementation Plan
+
+- [x] 1. 安装依赖并初始化项目基础配置
+  - 安装 element-plus、@element-plus/icons-vue、echarts、vue-echarts、sass、fast-check
+  - 配置 vite.config.ts 支持路径别名 `@` 指向 src
+  - 在 main.ts 中引入 Element Plus 暗色主题
+  - _Requirements: 10.1, 10.5_
+
+- [x] 2. 定义类型系统与 Mock 数据
+  - [x] 2.1 创建 `src/types/index.ts`，定义所有数据模型接口
+    - 包含 User、Model、ModelCategory、TrainingJob、TrainingStatus、TrainingConfig、Dataset、ApiKey、NavItem、MetricSummary、AnalyticsData
+    - _Requirements: 3.1, 4.1, 5.1, 6.1_
+  - [x] 2.2 创建 `src/mock/data.ts`，生成各模块本地 mock 数据
+    - 包含 12 条模型数据（覆盖各 category）、5 条训练任务、5 条数据集、3 条 API Key、MetricSummary、AnalyticsData
+    - _Requirements: 3.1, 4.1, 5.1, 6.1, 9.1_
+
+- [x] 3. 创建全局样式
+  - [x] 3.1 创建 `src/assets/styles/variables.css`，定义 CSS 变量
+    - 主背景色 `--color-bg-primary: #0a0e1a`，强调色 `--color-accent: #1677ff`，卡片背景、边框、文字色等
+    - _Requirements: 10.1_
+  - [x] 3.2 创建 `src/assets/styles/global.css`，定义全局基础样式
+    - 所有交互元素 200–300ms transition，卡片 hover glow/elevation 效果
+    - 在 main.ts 中引入两个样式文件
+    - _Requirements: 10.2, 10.4_
+
+- [x] 4. 实现 Auth Store 与路由
+  - [x] 4.1 创建 `src/stores/auth.ts`
+    - `login(username, password)` 仅接受 admin/admin，返回 `{ success: boolean, error?: string }`
+    - `logout()` 清除用户状态
+    - `isAuthenticated` computed getter，`user` state
+    - _Requirements: 1.2, 1.3, 1.5_
+  - [x] 4.2 更新 `src/router/index.ts`，配置全部路由与导航守卫
+    - 路由：/login（public）、/dashboard、/models、/models/:id、/fine-tuning、/data、/api-keys、/inference、/analytics（均 protected）
+    - `beforeEach` 守卫：未认证访问受保护路由重定向到 /login
+    - _Requirements: 1.1, 1.4_
+  - [ ]* 4.3 为 auth store 编写属性测试（`src/stores/__tests__/auth.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 2: 非法凭据被拒绝** — 任意非 admin/admin 凭据均返回错误
+    - **Feature: maas-platform-frontend, Property 3: 登出后会话清除** — 登录后调用 logout，isAuthenticated 为 false
+    - **Validates: Requirements 1.3, 1.5**
+
+- [x] 5. 实现布局组件
+  - [x] 5.1 创建 `src/components/layout/AppSidebar.vue`
+    - 展示六个导航分组：模型广场、模型训练、数据管理、安全工具、工具应用、统计看板
+    - 支持 collapsed 状态（icon-only），高亮当前激活路由
+    - _Requirements: 8.1, 8.2, 8.3, 8.4_
+  - [x] 5.2 创建 `src/components/layout/AppHeader.vue`
+    - 展示平台 Logo、面包屑导航、用户头像与下拉菜单（含退出登录）
+    - _Requirements: 8.5, 1.5_
+  - [x] 5.3 创建 `src/components/layout/AppLayout.vue`
+    - 组合 AppSidebar + AppHeader + `<router-view>`，管理 sidebar 折叠状态
+    - 视口宽度 < 1024px 时自动折叠 sidebar
+    - _Requirements: 8.4, 2.5_
+  - [x] 5.4 更新 `src/App.vue`，根据路由渲染 AppLayout 或直接渲染登录页
+    - _Requirements: 1.1, 8.1_
+  - [ ]* 5.5 为 AppSidebar 编写属性测试（`src/components/__tests__/AppSidebar.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 5: 认证页面侧边栏持久存在** — 渲染后 DOM 包含全部六个导航分组
+    - **Feature: maas-platform-frontend, Property 12: 激活导航项与当前路由匹配** — 任意路由路径，active item key 与对应 NavItem.path 匹配
+    - **Validates: Requirements 2.5, 8.1, 8.2**
+
+- [x] 6. 实现公共组件
+  - [x] 6.1 创建 `src/components/common/MetricCard.vue`
+    - Props: title、value、icon、trend、color；展示数值、图标、趋势箭头
+    - _Requirements: 2.2_
+  - [x] 6.2 创建 `src/components/common/StatusBadge.vue`
+    - Props: status（TrainingStatus | 'active' | 'disabled'）；根据状态显示对应颜色标签
+    - _Requirements: 4.1, 6.1_
+  - [x] 6.3 创建 `src/components/common/LoadingSkeleton.vue`
+    - 展示卡片骨架屏占位，用于列表加载状态
+    - _Requirements: 3.5_
+  - [ ]* 6.4 为 MetricCard 编写属性测试（`src/components/__tests__/MetricCard.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 4: Dashboard 指标卡片完整性** — 任意 MetricSummary 数据，渲染后包含四个指标卡片
+    - **Validates: Requirements 2.2**
+
+- [x] 7. 实现工具函数
+  - [x] 7.1 创建 `src/utils/filter.ts`
+    - `filterModelsByKeyword(models, keyword)` — 按 name/description 过滤（大小写不敏感）
+    - `filterModelsByCategory(models, category)` — 按 category 精确过滤
+    - _Requirements: 3.2, 3.3_
+  - [x] 7.2 创建 `src/utils/validation.ts`
+    - `validateRequired(fields)` — 检查必填字段，返回错误信息数组
+    - `maskApiKey(fullKey)` — 生成掩码 key（保留前8位，其余替换为 •）
+    - _Requirements: 4.4, 5.4, 6.3_
+  - [ ]* 7.3 为工具函数编写属性测试（`src/utils/__tests__/filter.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 7: 搜索过滤正确性** — 任意 keyword 和 Model 数组，结果仅含匹配项
+    - **Feature: maas-platform-frontend, Property 8: 分类过滤正确性** — 任意 category 和 Model 数组，结果仅含该分类模型
+    - **Validates: Requirements 3.2, 3.3**
+  - [ ]* 7.4 为验证函数编写属性测试（`src/utils/__tests__/validation.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 9: 表单验证——空必填字段触发错误** — 任意含空/纯空白字段的提交，返回非空错误数组
+    - **Feature: maas-platform-frontend, Property 11: API Key 在列表中始终以掩码形式展示** — 任意 fullKey，maskApiKey 返回值包含 • 且不等于原值
+    - **Validates: Requirements 4.4, 5.4, 6.3**
+
+- [x] 8. 实现登录页
+  - [x] 8.1 创建 `src/pages/LoginPage.vue`
+    - 科技感动效背景（CSS 渐变动画 + 粒子/光晕效果）
+    - 登录表单：用户名、密码输入框，提交按钮
+    - 调用 auth store login()，成功跳转 /dashboard，失败显示错误提示
+    - _Requirements: 1.2, 1.3, 10.3_
+
+- [x] 9. 实现 Dashboard 页
+  - [x] 9.1 创建 `src/pages/DashboardPage.vue`
+    - 顶部四个 MetricCard（总模型数、活跃训练任务、今日 API 调用、数据集数量）
+    - "一站式工具链"区块：选模型、改模型、用模型三张入口卡片
+    - 最新公告/动态区块（静态 mock 内容）
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
+- [x] 10. 实现模型广场页
+  - [x] 10.1 创建 `src/stores/models.ts`
+    - state: models 列表（来自 mock）、searchKeyword、selectedCategory、loading
+    - getters: filteredModels（调用 filter 工具函数）
+    - _Requirements: 3.1, 3.2, 3.3_
+  - [x] 10.2 创建 `src/pages/ModelMarketPage.vue`
+    - 搜索框 + 分类 Tab 过滤器
+    - 模型卡片网格（展示 name、description、category、tags）
+    - loading 时展示 LoadingSkeleton
+    - _Requirements: 3.1, 3.2, 3.3, 3.5_
+  - [x] 10.3 创建 `src/pages/ModelDetailPage.vue`
+    - 展示模型完整信息：参数量、提供商、能力标签、使用说明
+    - _Requirements: 3.4_
+  - [ ]* 10.4 为 models store 编写属性测试（`src/stores/__tests__/models.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 6: 模型卡片渲染完整性** — 任意 Model 对象，渲染卡片包含 name、description、category、至少一个 tag
+    - **Validates: Requirements 3.1**
+
+- [x] 11. 实现模型微调页
+  - [x] 11.1 创建 `src/stores/training.ts`
+    - state: jobs 列表（来自 mock）
+    - actions: `createJob(config)` 添加新任务（status 默认"待运行"），`deleteJob(id)`
+    - _Requirements: 4.1, 4.3_
+  - [x] 11.2 创建 `src/pages/FineTuningPage.vue`
+    - 训练任务列表表格（name、baseModelName、status、createdAt、操作列）
+    - "新建微调任务"按钮，点击打开多步骤表单 Dialog（步骤：选择基础模型 → 选择数据集 → 配置参数）
+    - 表单提交时调用 validateRequired，通过后调用 store createJob
+    - 点击详情按钮展示任务详情抽屉（配置参数 + 模拟进度条）
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+  - [ ]* 11.3 为 training store 编写属性测试（`src/stores/__tests__/training.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 10: 有效表单提交使列表长度增加1** — 任意有效 TrainingJob，createJob 后列表长度 +1
+    - **Validates: Requirements 4.3**
+
+- [x] 12. 实现数据管理页
+  - [x] 12.1 创建 `src/stores/datasets.ts`
+    - state: datasets 列表（来自 mock）
+    - actions: `createDataset(data)`、`deleteDataset(id)`
+    - _Requirements: 5.1, 5.3, 5.5_
+  - [x] 12.2 创建 `src/pages/DataManagementPage.vue`
+    - 数据集列表表格（name、type、size、recordCount、createdAt、操作列）
+    - "新建数据集"按钮，点击打开创建表单 Dialog（name、description、type 字段）
+    - 表单提交时调用 validateRequired，通过后调用 store createDataset
+    - 删除按钮触发 ElMessageBox confirm 确认后调用 deleteDataset
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+  - [ ]* 12.3 为 datasets store 编写属性测试（`src/stores/__tests__/datasets.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 10: 有效表单提交使列表长度增加1** — 任意有效 Dataset，createDataset 后列表长度 +1
+    - **Validates: Requirements 5.3**
+
+- [x] 13. 实现 API Key 管理页
+  - [x] 13.1 创建 `src/stores/apikeys.ts`
+    - state: apiKeys 列表（来自 mock）
+    - actions: `createApiKey(name)` 生成随机 key 并调用 maskApiKey 存储掩码版本，`deleteApiKey(id)`
+    - _Requirements: 6.1, 6.2, 6.3_
+  - [x] 13.2 创建 `src/pages/ApiKeyPage.vue`
+    - API Key 列表表格（name、maskedKey、status、createdAt、操作列）
+    - "新建 API Key"按钮，点击打开 Dialog 输入名称并生成
+    - 创建成功后弹出一次性展示完整 key 的 Modal（含复制按钮）
+    - 删除按钮触发确认 Dialog
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
+  - [ ]* 13.3 为 apikeys store 编写属性测试（`src/stores/__tests__/apikeys.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 11: API Key 在列表中始终以掩码形式展示** — 任意创建的 key，store 中 maskedKey 包含 • 且不等于原始 key
+    - **Validates: Requirements 6.3**
+
+- [x] 14. 实现在线推理页
+  - [x] 14.1 创建 `src/pages/InferencePage.vue`
+    - 左侧模型选择列表（已部署模型，来自 mock）
+    - 右侧交互式 Chat 面板：消息列表 + 输入框 + 发送按钮
+    - 发送 prompt 后显示 loading 动画，1.5s 后渲染模拟回复
+    - _Requirements: 7.1, 7.2, 7.3_
+
+- [x] 15. 实现统计看板页
+  - [x] 15.1 创建 `src/components/charts/LineChart.vue`
+    - 封装 vue-echarts，接受 dates、series 数据，渲染折线图
+    - _Requirements: 9.1_
+  - [x] 15.2 创建 `src/pages/AnalyticsPage.vue`
+    - 顶部三个摘要卡片（总 API 调用、总 Token 消耗、活跃模型数）
+    - API 调用趋势折线图，支持 日/周/月 时间范围切换
+    - 模型使用占比饼图
+    - _Requirements: 9.1, 9.2, 9.3, 9.4_
+  - [ ]* 15.3 为 Analytics 页编写属性测试（`src/pages/__tests__/AnalyticsPage.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 13: 统计看板摘要卡片完整性** — 任意 AnalyticsData，渲染后包含三个摘要卡片
+    - **Validates: Requirements 9.3**
+
+- [x] 16. Checkpoint — 确保所有测试通过
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 17. 路由守卫属性测试
+  - [ ]* 17.1 为路由守卫编写属性测试（`src/router/__tests__/guard.spec.ts`）
+    - **Feature: maas-platform-frontend, Property 1: 未认证访问任意受保护路由均重定向到登录页** — 任意受保护路由路径，未认证时 next 调用参数为 /login
+    - **Validates: Requirements 1.1, 1.4**
+
+- [x] 18. Final Checkpoint — 确保所有测试通过
+  - Ensure all tests pass, ask the user if questions arise.

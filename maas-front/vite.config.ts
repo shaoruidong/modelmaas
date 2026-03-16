@@ -7,19 +7,34 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueJsx(),
-    vueDevTools(),
-  ],
-  server:{
-    host: '0.0.0.0', // 允许外部访问
-    port: 5713,      // 固定端口
-    strictPort: true // 端口被占用时直接报错
+  plugins: [vue(), vueJsx(), vueDevTools()],
+  server: {
+    host: '0.0.0.0',
+    port: 5713,
+    strictPort: true,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5713,
+    strictPort: true,
+  },
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        // 手动分包，避免单 chunk 过大导致内存峰值
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-element': ['element-plus', '@element-plus/icons-vue'],
+          'vendor-echarts': ['echarts', 'vue-echarts'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
 })
