@@ -77,5 +77,5 @@ export interface MetricSummary {
 export interface AnalyticsData {
   dates: string[]
   apiCalls: number[]
-  tokensConsumed: number[]
+  tokens: number[]
 }

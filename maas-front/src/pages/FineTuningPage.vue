@@ -150,10 +150,7 @@ function formatDate(iso: string) {
             :key="m.id"
             class="select-card"
             :class="{ selected: form.baseModelId === m.id }"
-            @click="
-              form.baseModelId = m.id
-              form.baseModelName = m.name
-            "
+            @click="form.baseModelId = m.id; form.baseModelName = m.name"
           >
             <div class="select-card-name">{{ m.name }}</div>
             <div class="select-card-sub">{{ m.provider }} · {{ m.parameterSize }}</div>

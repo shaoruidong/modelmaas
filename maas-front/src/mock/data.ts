@@ -277,5 +277,5 @@ export const mockMetricSummary: MetricSummary = {
 export const mockAnalyticsData: AnalyticsData = {
   dates: ['03-09', '03-10', '03-11', '03-12', '03-13', '03-14', '03-15'],
   apiCalls: [32100, 38500, 41200, 35800, 44600, 51200, 48392],
-  tokensConsumed: [12400000, 15200000, 16800000, 14100000, 18300000, 21500000, 19800000],
+  tokens: [12400000, 15200000, 16800000, 14100000, 18300000, 21500000, 19800000],
 }

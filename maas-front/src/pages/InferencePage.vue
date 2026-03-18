@@ -60,7 +60,7 @@ async function sendMessage() {
 
   await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800))
 
-  const template = mockResponses[Math.floor(Math.random() * mockResponses.length)]
+  const template = mockResponses[Math.floor(Math.random() * mockResponses.length)] ?? ''
   const response = template.replace('{input}', text.slice(0, 20))
 
   messages.value.push({
