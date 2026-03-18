@@ -1,2 +1,56 @@
-# 忽略所有 .log 日志文件
+# ── Kiro ──────────────────────────────────────────────────────────────────────
+.kiro/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# ── Django ────────────────────────────────────────────────────────────────────
+*.sqlite3
+maas-backend/.env
+staticfiles/
+media/
+
+# ── 日志 ──────────────────────────────────────────────────────────────────────
 *.log
+logs/
+
+# ── Node / 前端 ───────────────────────────────────────────────────────────────
+node_modules/
+maas-front/dist/
+maas-front/dist-ssr/
+maas-front/coverage/
+*.local
+*.tsbuildinfo
+.eslintcache
+__screenshots__/
+test-results/
+playwright-report/
+*.timestamp-*-*.mjs
+
+# ── 编辑器 / 系统 ─────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── 环境变量 ──────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+maas-backend/.env
+
+# ── Docker 数据卷（本地开发产生的）────────────────────────────────────────────
+docker/mysql/data/
