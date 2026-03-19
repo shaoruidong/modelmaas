@@ -6,19 +6,26 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 
-const form = reactive({ username: '', password: '' })
+const form = reactive({ phone: '', password: '' })
 const error = ref('')
 const loading = ref(false)
 
+function validatePhone(phone: string) {
+  return /^1[3-9]\d{9}$/.test(phone)
+}
+
 async function handleLogin() {
   error.value = ''
-  if (!form.username || !form.password) {
-    error.value = '请输入用户名和密码'
+  if (!form.phone || !form.password) {
+    error.value = '请输入手机号和密码'
+    return
+  }
+  if (!validatePhone(form.phone)) {
+    error.value = '请输入正确的手机号'
     return
   }
   loading.value = true
-  await new Promise((r) => setTimeout(r, 600))
-  const result = auth.login(form.username, form.password)
+  const result = await auth.login(form.phone, form.password)
   loading.value = false
   if (result.success) {
     router.push('/dashboard')
@@ -49,15 +56,16 @@ async function handleLogin() {
       </div>
 
       <h2 class="login-title">欢迎回来</h2>
-      <p class="login-desc">登录以访问大模型管理平台</p>
+      <p class="login-desc">登录 / 注册以访问大模型管理平台</p>
 
       <el-form @submit.prevent="handleLogin" class="login-form">
         <el-form-item>
           <el-input
-            v-model="form.username"
-            placeholder="用户名"
+            v-model="form.phone"
+            placeholder="手机号"
             size="large"
-            prefix-icon="User"
+            prefix-icon="Phone"
+            maxlength="11"
             @keyup.enter="handleLogin"
           />
         </el-form-item>
@@ -87,11 +95,11 @@ async function handleLogin() {
           class="login-btn"
           @click="handleLogin"
         >
-          {{ loading ? '登录中...' : '登 录' }}
+          {{ loading ? '登录中...' : '登 录 / 注 册' }}
         </el-button>
       </el-form>
 
-      <div class="login-hint">默认账号：admin / admin</div>
+      <div class="login-hint">首次登录将自动注册账号</div>
     </div>
   </div>
 </template>
@@ -107,7 +115,6 @@ async function handleLogin() {
   overflow: hidden;
 }
 
-/* Animated orbs */
 .bg-animation {
   position: absolute;
   inset: 0;
@@ -151,13 +158,8 @@ async function handleLogin() {
 }
 
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-30px) scale(1.05);
-  }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
 }
 
 .orb-3 {
@@ -165,16 +167,10 @@ async function handleLogin() {
 }
 
 @keyframes float3 {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -60%) scale(1.1);
-  }
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -60%) scale(1.1); }
 }
 
-/* Grid overlay */
 .grid-overlay {
   position: absolute;
   inset: 0;
@@ -184,7 +180,6 @@ async function handleLogin() {
   background-size: 40px 40px;
 }
 
-/* Login card */
 .login-card {
   position: relative;
   z-index: 10;
@@ -256,9 +251,7 @@ async function handleLogin() {
   border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-sm) !important;
   box-shadow: none !important;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast) !important;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast) !important;
 }
 
 .login-form :deep(.el-input__wrapper:hover),

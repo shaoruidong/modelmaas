@@ -1,0 +1,84 @@
+# ════════════════════════════════════════════════════════════════════════════
+# MaaS 平台 — 一键启动
+# 用法：
+#   cp .env.example .env  # 填写配置
+#   docker compose up -d --build
+# ════════════════════════════════════════════════════════════════════════════
+
+networks:
+  maas-network:
+    driver: bridge
+    name: maas-network   # 自建内部网络，容器间通过服务名通信
+
+volumes:
+  mysql_data:       # MySQL 数据永久保存
+  backend_static:   # Django 静态文件
+
+services:
+
+  # ── MySQL 数据库 ─────────────────────────────────────────────────────────────
+  maas-db:
+    image: mysql:8.0
+    container_name: maas-db
+    restart: unless-stopped
+    networks:
+      - maas-network
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE:      ${DB_NAME}
+      MYSQL_ROOT_HOST:     '%'
+    ports:
+      - "3307:3306"   # 宿主机 3306 已占用，映射到 3307
+    volumes:
+      - mysql_data:/var/lib/mysql                          # 数据永久保存
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d   # 初始化 SQL（可选）
+      - ./docker/mysql/conf:/etc/mysql/conf.d              # 自定义 MySQL 配置
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+      --max_connections=200
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # ── Django 后端 ──────────────────────────────────────────────────────────────
+  maas-backend:
+    build:
+      context: ./maas-backend
+      dockerfile: Dockerfile
+    image: maas-backend:latest
+    container_name: maas-backend
+    restart: unless-stopped
+    networks:
+      - maas-network
+    env_file:
+      - .env
+    environment:
+      DB_HOST: maas-db    # 内部网络通过服务名访问 MySQL
+    ports:
+      - "8000:8000"
+    depends_on:
+      maas-db:
+        condition: service_healthy
+    volumes:
+      - backend_static:/app/staticfiles
+
+  # ── 前端 Nginx ───────────────────────────────────────────────────────────────
+  maas-frontend:
+    build:
+      context: ./maas-front
+      dockerfile: Dockerfile
+    image: maas-frontend:latest
+    container_name: maas-frontend
+    restart: unless-stopped
+    networks:
+      - maas-network
+    ports:
+      - "5713:5713"
+    depends_on:
+      - maas-backend

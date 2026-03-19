@@ -3,6 +3,13 @@
 import os
 import sys
 
+# 兼容 PyMySQL（若未安装 mysqlclient 则自动使用 PyMySQL）
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 
 def main():
     """Run administrative tasks."""
