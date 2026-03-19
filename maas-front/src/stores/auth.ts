@@ -29,9 +29,12 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('user', JSON.stringify(data.user))
       return { success: true }
     } catch (err: any) {
+      const data = err.response?.data
       const msg =
-        err.response?.data?.detail ||
-        err.response?.data?.non_field_errors?.[0] ||
+        data?.detail ||
+        data?.non_field_errors?.[0] ||
+        data?.phone?.[0] ||
+        data?.password?.[0] ||
         '登录失败，请稍后重试'
       return { success: false, error: msg }
     }

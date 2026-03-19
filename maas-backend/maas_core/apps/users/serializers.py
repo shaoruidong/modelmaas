@@ -25,7 +25,7 @@ class LoginSerializer(serializers.Serializer):
         else:
             # 已注册：校验密码
             if not user.check_password(password):
-                raise serializers.ValidationError({'detail': '密码错误'})
+                raise serializers.ValidationError('密码错误')
 
         attrs['user'] = user
         return attrs
