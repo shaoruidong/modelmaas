@@ -56,13 +56,13 @@ function handleCommand(cmd: string) {
 
       <el-dropdown @command="handleCommand" trigger="click">
         <div class="user-avatar">
-          <span>{{ auth.user?.username?.charAt(0).toUpperCase() }}</span>
+          <span>{{ (auth.user?.nickname || auth.user?.phone || '').charAt(0).toUpperCase() }}</span>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item disabled>
               <el-icon><User /></el-icon>
-              {{ auth.user?.username }}
+              {{ auth.user?.nickname || auth.user?.phone }}
             </el-dropdown-item>
             <el-dropdown-item divided command="logout">
               <el-icon><SwitchButton /></el-icon>

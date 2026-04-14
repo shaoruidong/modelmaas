@@ -5,7 +5,9 @@ import request from '@/utils/request'
 export interface AuthUser {
   id: number
   phone: string
+  nickname: string
   role: string
+  avatar_url: string | null
 }
 
 export const useAuthStore = defineStore('auth', () => {

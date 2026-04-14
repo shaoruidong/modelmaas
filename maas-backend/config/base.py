@@ -84,5 +84,9 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ── 媒体文件（头像等上传文件）────────────────────────────────────────────────
+MEDIA_URL  = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # ── 路由入口 ──────────────────────────────────────────────────────────────────
 ROOT_URLCONF = 'maas_core.urls'

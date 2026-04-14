@@ -34,6 +34,7 @@ sys.exit(1)
 PYEOF
 
 echo ">>> 执行数据库迁移..."
+python manage.py makemigrations --noinput
 python manage.py migrate --noinput
 
 echo ">>> 收集静态文件..."

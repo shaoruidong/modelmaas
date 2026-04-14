@@ -22,6 +22,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [('admin', '管理员'), ('user', '普通用户')]
 
     phone      = models.CharField(max_length=11, unique=True, verbose_name='手机号')
+    nickname   = models.CharField(max_length=32, blank=True, default='', verbose_name='昵称')
+    avatar     = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name='头像')
     role       = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user', verbose_name='角色')
     is_active  = models.BooleanField(default=True, verbose_name='是否启用')
     is_staff   = models.BooleanField(default=False, verbose_name='是否管理员')

@@ -13,6 +13,7 @@ networks:
 volumes:
   mysql_data:       # MySQL 数据永久保存
   backend_static:   # Django 静态文件
+  backend_media:    # 用户上传文件（头像等）
 
 services:
 
@@ -67,6 +68,7 @@ services:
         condition: service_healthy
     volumes:
       - backend_static:/app/staticfiles
+      - backend_media:/app/media
 
   # ── 前端 Nginx ───────────────────────────────────────────────────────────────
   maas-frontend:
